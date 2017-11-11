@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Nine Patch Quiz</title>
+    <style>
+
+        * {
+            -moz-box-sizing: border-box; /* Firefox */
+            -webkit-box-sizing: border-box; /* Safari */
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            margin: 0 auto;
+            max-width: 360px;
+            /* text-align: center; */
+        }
+
+        .box {
+            width: 180px;
+            height: 180px;
+            margin: 0 auto;
+            margin-top: 30px; 
+        }
+
+        .box div {
+            width: 60px;
+            height: 60px;
+            border: 1px solid black;
+            float: left;
+            text-align: center;
+            line-height: 60px;
+            overflow: hidden;
+        }
+
+        .box div[class^="r1"],
+        .box div[class^="r2"] {
+            border-bottom: 0;
+        }
+
+        .box div[class*="c1"],
+        .box div[class*="c2"] {
+            border-right: 0;
+        }
+
+        .box div input {
+            width: 100%;
+            height: 100%;
+            border: 0;
+            outline: 0;
+            text-align: center;
+            vertical-align: middle;
+            display: inline-block;
+            font-size: 20px;
+            background-color: transparent;
+        }
+
+        h1,h2,h3,h4,h5,h6 {
+            margin: 15px 0;
+        }
+
+        .submit {
+            display: block;
+            color: white;
+            background-color: rgb(26, 110, 219);
+            border: 0;
+            width: 180px;
+            height: 2.5em;
+            margin: 20px auto;
+            border-radius: 5px;
+        }
+
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>想一想，填一填</h1>
+        <h3>在空的格子里填上数字，使每一横行、每一竖行的三个数相加都是9。</h3>
+        <div class="box">
+            <div class="r1c1"></div>
+            <div class="r1c2"></div>
+            <div class="r1c3"></div>
+            <div class="r2c1"></div>
+            <div class="r2c2"></div>
+            <div class="r2c3"></div>
+            <div class="r3c1"></div>
+            <div class="r3c2"></div>
+            <div class="r3c3"></div>
+        </div>
+        <button class="submit">提交</button>
+    </div>
+    <script src="https://cdn.bootcss.com/jquery/3.2.1/jquery.min.js"></script>
+    <script>
+
+        $(document).ready(function(){
+            
+            //测试九宫格中的数字横竖向加起来是否满足条件
+            function checkNineBlock()
+            {
+                if( (arguments[0]+arguments[1]+arguments[2] == 9) && 
+                    (arguments[3]+arguments[4]+arguments[5] == 9) && 
+                    (arguments[6]+arguments[7]+arguments[8] == 9) && 
+                    (arguments[0]+arguments[3]+arguments[6] == 9) &&
+                    (arguments[1]+arguments[4]+arguments[7] == 9) && 
+                    (arguments[2]+arguments[5]+arguments[8] == 9) ) {
+                    return true;
+                }
+                else{
+                    return false;
+                }
+            }
+
+            function doNineBlocksQuiz()
+            {
+                
+                //测试四个位置是否满足条件
+                function checkFourPOS(fourPos)
+                {
+                    var blocks = [[0,0],[0,1],[0,2],[1,0],[1,1],[1,2],[2,0],[2,1],[2,2]];
+                    var fourBlocksPos = [];
+                    for(var i=0;i<4;++i)
+                    {
+                        fourBlocksPos[i] = fourPos[i].row*3 + fourPos[i].col;
+                    }
+
+                    //一种情况4个格子存在在一行或一列则不满足
+                    var nums = [0,0,0];
+                    for(var i=0;i<4;++i)
+                    {
+                        nums[fourPos[i].row] ++;
+                    }
+
+                    if(nums[0]>=3 || nums[1]>=3 || nums[2]>=3)
+                    {
+                        return false;
+                    }
+                    
+                    nums = [0,0,0];
+                    for(var i=0;i<4;++i)
+                    {
+                        nums[fourPos[i].col] ++;
+                    }
+
+                    if(nums[0]>=3 || nums[1]>=3 || nums[2]>=3)
+                    {
+                        return false;
+                    }
+
+                    //另一种情况如果除了4个格子剩下的格子存在同时有一行和一列的则不满足
+                    var dret = false;
+                    nums = [0,0,0];
+                    for(var i=0;i<9;++i)
+                    {
+                        if(i == fourBlocksPos[0] || i == fourBlocksPos[1] || i == fourBlocksPos[2] || i == fourBlocksPos[3])
+                        {
+                            continue;
+                        }
+                        nums[blocks[i][0]] ++;
+                    }
+
+                    if(nums[0]>=3 || nums[1]>=3 || nums[2]>=3)
+                    {
+                        dret = true;
+                    }
+                    
+                    nums = [0,0,0];
+                    for(var i=0;i<9;++i)
+                    {
+                        if(i == fourBlocksPos[0] || i == fourBlocksPos[1] || i == fourBlocksPos[2] || i == fourBlocksPos[3])
+                        {
+                            continue;
+                        }
+                        nums[blocks[i][1]] ++;
+                    }
+
+                    if(nums[0]>=3 || nums[1]>=3 || nums[2]>=3)
+                    {
+                        dret = dret && true;
+                    }
+
+                    if(dret)
+                    {
+                        return false;
+                    }
+
+                    return true;
+                }
+
+                function Pos(row,col)
+                {
+                    this.row = row;
+                    this.col = col;
+                }
+
+                var row1 = [];
+                var row2 = [];
+                var row3 = [];
+
+                var x = 9; //上限     
+                var y = 0; //下限
+
+                while(true)
+                {
+                    for(var i=0;i<3;++i)
+                    {
+                        row1[i] = parseInt(Math.random() * (x - y + 1) + y);
+                    }  
+
+                    for(var i=0;i<3;++i)
+                    {
+                        row2[i] = parseInt(Math.random() * (x - y + 1) + y);
+                    }  
+
+                    for(var i=0;i<3;++i)
+                    {
+                        row3[i] = parseInt(Math.random() * (x - y + 1) + y);
+                    }  
+
+                    //判断是否满足条件
+                    var ret = checkNineBlock(row1[0],row1[1],row1[2],row2[0],row2[1],row2[2],row3[0],row3[1],row3[2]);
+
+                    if(ret)
+                    {
+                        //将九个格子填入满足条件的数字
+                        for(var n=0;n<3;++n)
+                        {
+                            $(".box div:eq("+n+")").html(row1[n]);
+                            $(".box div:eq("+n+")").css("background-color","#fff");
+                        }
+
+                        for(var n=3;n<6;++n)
+                        {
+                            $(".box div:eq("+n+")").html(row2[n-3]);
+                            $(".box div:eq("+n+")").css("background-color","#fff");
+                        }
+
+                        for(var n=6;n<9;++n)
+                        {
+                            $(".box div:eq("+n+")").html(row3[n-6]);
+                            $(".box div:eq("+n+")").css("background-color","#fff");
+                        }
+
+                        //随机四个位置让用户输入
+                        var posArray = [];
+                        while(true)
+                        {
+                            for(var i=0;i<4;++i)
+                            {
+                                var x = 2; //上限     
+                                var y = 0; //下限
+                                var tempRow;
+                                var tempCol;
+
+                                while(true)
+                                {
+                                    var ret = false;
+                                    tempRow = parseInt(Math.random() * (x - y + 1) + y);
+                                    tempCol = parseInt(Math.random() * (x - y + 1) + y)
+
+                                    for(var j=0;j<i;++j)
+                                    {
+                                        if(posArray[j].row == tempRow && posArray[j].col == tempCol)
+                                        {
+                                            ret = true;
+                                            break;
+                                        }
+                                    }
+
+                                    if(ret)
+                                    {
+                                        continue;
+                                    }
+                                    else
+                                    {
+                                        break;
+                                    }
+                                }
+
+                                posArray[i] = new Pos(tempRow,tempCol);
+                                
+                            }
+
+                            var ret = checkFourPOS(posArray);
+                            if(ret)
+                            {
+                                break;
+                            }
+                        }
+
+                        //将四个位置用输入框代替
+
+                        for(var i=0;i<4;++i)
+                        {
+                            var n = posArray[i].row*3+posArray[i].col;
+                            $(".box div:eq("+n+")").css("background-color","#ccc");
+                            $(".box div:eq("+n+")").html("<input type=\"number\">");
+                        }
+
+                        break;
+                    }
+                }
+            }
+            
+            doNineBlocksQuiz();
+
+            //设置提交按钮的点击事件
+            $(".submit").click(function(){
+                var inputs = $(".box div input");
+                var ret = false;
+                $.each(inputs,function(i){
+                    
+                    if(isNaN(parseInt($(this).val(),10)))
+                    {
+                        ret = true;
+                    }
+                });
+
+                if(ret)
+                {
+                    alert("请输入完整，并确保输入的都是数字！");
+                    return;
+                }
+
+                var allelem = $(".box div");
+                var nums = [];
+                $.each(allelem,function(i,element){
+                    
+                    if($(this).find("input").length > 0)
+                    {
+                        nums[i] = parseInt($(this).find("input")[0].value);
+                    }
+                    else
+                    {
+                        nums[i] = parseInt($(this)[0].innerText);
+                    }
+
+                });
+
+                if(checkNineBlock(nums[0],nums[1],nums[2],nums[3],nums[4],nums[5],nums[6],nums[7],nums[8]))
+                {
+                    alert("你真棒！完全正确！");
+                    doNineBlocksQuiz();
+                }
+                else
+                {
+                    alert("错误！请仔细再做题！");
+                }
+                
+            });
+
+            $(".refresh").click(function(){
+                doNineBlocksQuiz();
+            });
+
+            
+        });
+        
+    </script>
+</body>
+
+</html>
